@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block content %}
+<nav class="fixed top-0 left-0 w-full z-[9999] backdrop-blur-xl bg-black/40 border-b border-white/10 px-8 py-4 flex items-center transition-all">
+    <a href="{{ url_for('dashboard') }}" class="text-gray-400 hover:text-[#22D3EE] transition-colors flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        Back
+    </a>
+    <div class="mx-auto font-bold text-white tracking-wide">Mark Attendance</div>
+</nav>
+
+<div class="flex-grow p-6 pt-24 max-w-3xl mx-auto w-full">
+    
+    <div class="glass-card interactive rounded-xl overflow-hidden mb-8">
+        <div class="px-6 py-5 border-b border-white/10 bg-white/5 flex justify-between items-center">
+            <h2 class="font-semibold text-white text-lg">Manual Entry</h2>
+            <div class="text-sm text-gray-400"><span id="present-count" class="text-[#22D3EE] font-bold">0</span>/{{ students|length }} Present</div>
+        </div>
+        
+        <div class="divide-y divide-white/5 max-h-[60vh] overflow-y-auto">
+            {% for s in students %}
+            <div class="flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors group">
+                <div>
+                    <div class="font-medium text-[#E5E7EB]">{{ s.name }}</div>
+                    <div class="text-sm text-gray-500 group-hover:text-gray-400 transition-colors">Roll: {{ s.roll }}</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer student-checkbox" value="{{ s.roll }}" onchange="updateCount()">
+                    <div class="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#22D3EE] shadow-inner"></div>
+                    <span class="ml-3 text-sm font-medium text-gray-500 w-12 peer-checked:text-[#22D3EE] peer-checked:font-bold peer-checked:drop-shadow-[0_0_5px_rgba(34,211,238,0.5)] state-text transition-all">Absent</span>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="flex justify-center mt-10">
+        <button onclick="openVerifyModal()" class="btn-primary py-3.5 px-8 rounded-full text-lg shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            Verify with AI
+        </button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="verify-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-40 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+    <div class="glass-card rounded-2xl w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform duration-300 shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/20 z-50" id="modal-content">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+            <h3 class="font-bold text-xl text-white">AI Verification</h3>
+            <button onclick="closeVerifyModal()" class="text-gray-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <div id="upload-section">
+            <div class="p-6 space-y-6">
+                <div class="border-2 border-dashed border-[#A855F7]/40 rounded-xl p-8 text-center hover:bg-[#A855F7]/10 hover:border-[#A855F7] transition-colors cursor-pointer group" onclick="document.getElementById('image-upload').click()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-[#A855F7] mx-auto mb-3 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <div class="text-base font-semibold text-[#E5E7EB]">Upload Class Image</div>
+                    <div class="text-xs text-gray-400 mt-2" id="file-name">JPG, PNG up to 10MB</div>
+                    <input type="file" id="image-upload" class="hidden" accept="image/*" onchange="handleFileSelect(event)">
+                </div>
+                
+                <div class="relative flex items-center py-2">
+                    <div class="flex-grow border-t border-white/10"></div>
+                    <span class="flex-shrink-0 mx-4 text-gray-500 text-xs font-semibold uppercase tracking-widest">OR</span>
+                    <div class="flex-grow border-t border-white/10"></div>
+                </div>
+                
+                <button onclick="startCamera()" class="w-full bg-white/10 hover:bg-white/20 text-[#E5E7EB] font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2 border border-white/5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Open Camera
+                </button>
+            </div>
+            
+            <div class="p-5 border-t border-white/10 bg-white/5 flex justify-end">
+                <button onclick="submitVerification()" id="process-btn" class="btn-primary py-2.5 px-6 opacity-50 cursor-not-allowed" disabled>
+                    Process Image
+                </button>
+            </div>
+        </div>
+
+        <!-- Camera Section -->
+        <div id="camera-section" class="hidden">
+            <div class="p-6 space-y-4">
+                <div class="relative rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center border border-white/10 shadow-inner">
+                    <video id="video-preview" autoplay playsinline class="w-full h-full object-cover"></video>
+                    <canvas id="camera-canvas" class="hidden"></canvas>
+                </div>
+            </div>
+            <div class="p-5 border-t border-white/10 bg-white/5 flex gap-3">
+                <button onclick="stopCamera()" class="flex-1 bg-white/10 hover:bg-white/20 text-gray-300 font-medium py-2.5 rounded-xl transition-colors">
+                    Cancel
+                </button>
+                <button onclick="captureAndVerify()" id="capture-btn" class="flex-1 btn-primary py-2.5 rounded-xl">
+                    Capture & Verify
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateCount() {
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        let count = 0;
+        checkboxes.forEach(cb => {
+            const textSpan = cb.parentElement.querySelector('.state-text');
+            if (cb.checked) {
+                count++;
+                textSpan.innerText = 'Present';
+            } else {
+                textSpan.innerText = 'Absent';
+            }
+        });
+        document.getElementById('present-count').innerText = count;
+    }
+
+    const modal = document.getElementById('verify-modal');
+    const modalContent = document.getElementById('modal-content');
+
+    function openVerifyModal() {
+        modal.classList.remove('hidden');
+        // trigger reflow
+        void modal.offsetWidth;
+        modal.classList.remove('opacity-0');
+        modalContent.classList.add('modal-enter');
+        modalContent.classList.remove('scale-95');
+    }
+
+    function closeVerifyModal() {
+        modal.classList.add('opacity-0');
+        modalContent.classList.remove('modal-enter');
+        modalContent.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    let selectedFile = null;
+
+    function handleFileSelect(event) {
+        if(event.target.files.length > 0) {
+            selectedFile = event.target.files[0];
+            document.getElementById('file-name').innerText = selectedFile.name;
+            document.getElementById('file-name').classList.add('text-[#22D3EE]');
+            const btn = document.getElementById('process-btn');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    function submitVerification() {
+        if(!selectedFile) return;
+
+        // Collect marked students
+        const markedPresent = [];
+        document.querySelectorAll('.student-checkbox:checked').forEach(cb => {
+            markedPresent.push(cb.value);
+        });
+
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+        formData.append('marked_present', JSON.stringify(markedPresent));
+
+        const btn = document.getElementById('process-btn');
+        btn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg> Processing...`;
+        btn.disabled = true;
+
+        fetch('{{ url_for("verify_attendance") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                window.location.href = data.redirect;
+            } else {
+                alert(data.error || "An error occurred");
+                btn.innerHTML = 'Process Image';
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Failed to process image.");
+            btn.innerHTML = 'Process Image';
+            btn.disabled = false;
+        });
+    }
+
+    // Camera Logic
+    let stream = null;
+
+    async function startCamera() {
+        document.getElementById('upload-section').classList.add('hidden');
+        document.getElementById('camera-section').classList.remove('hidden');
+        
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+            document.getElementById('video-preview').srcObject = stream;
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            alert("Could not access the camera. Please make sure you have granted permission.");
+            stopCamera();
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        document.getElementById('camera-section').classList.add('hidden');
+        document.getElementById('upload-section').classList.remove('hidden');
+    }
+
+    function captureAndVerify() {
+        const video = document.getElementById('video-preview');
+        const canvas = document.getElementById('camera-canvas');
+        
+        if (!stream || !video.videoWidth) return;
+
+        // Collect marked students
+        const markedPresent = [];
+        document.querySelectorAll('.student-checkbox:checked').forEach(cb => {
+            markedPresent.push(cb.value);
+        });
+
+        // Draw frame to canvas
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Get base64 string
+        const base64Image = canvas.toDataURL("image/jpeg", 0.9);
+
+        const btn = document.getElementById('capture-btn');
+        btn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg> Verifying...`;
+        btn.disabled = true;
+
+        // Stop camera while processing
+        stream.getTracks().forEach(track => track.stop());
+
+        fetch('{{ url_for("verify_live") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image: base64Image,
+                marked_present: markedPresent
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                window.location.href = data.redirect;
+            } else {
+                alert(data.error || "An error occurred");
+                btn.innerHTML = 'Capture & Verify';
+                btn.disabled = false;
+                // Restart camera if they want to try again
+                startCamera();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Failed to process image.");
+            btn.innerHTML = 'Capture & Verify';
+            btn.disabled = false;
+            startCamera();
+        });
+    }
+
+    // Ensure camera stops when closing modal
+    const originalClose = closeVerifyModal;
+    closeVerifyModal = function() {
+        stopCamera();
+        originalClose();
+    };
+</script>
+{% endblock %}

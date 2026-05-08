@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex-grow p-6 max-w-4xl mx-auto w-full">
+    <h1 class="text-3xl font-bold text-white mb-6 text-center tracking-tight">Verification Results</h1>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="glass-card interactive rounded-xl p-4 text-center">
+            <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Class Strength</div>
+            <div class="text-3xl font-bold text-[#E5E7EB]">{{ results.class_strength }}</div>
+        </div>
+        <div class="glass-card interactive rounded-xl p-4 text-center relative overflow-hidden">
+            <div class="text-xs text-[#22D3EE] uppercase font-bold tracking-wider mb-1">AI Detected</div>
+            <div class="text-3xl font-bold text-[#22D3EE] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">{{ results.detected_count }}</div>
+            <div class="absolute -bottom-4 -right-4 w-16 h-16 bg-[#22D3EE]/20 blur-xl rounded-full"></div>
+        </div>
+        <div class="glass-card interactive rounded-xl p-4 text-center relative overflow-hidden">
+            <div class="text-xs text-[#A855F7] uppercase font-bold tracking-wider mb-1">Marked Present</div>
+            <div class="text-3xl font-bold text-[#A855F7] drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">{{ results.marked_count }}</div>
+            <div class="absolute -bottom-4 -right-4 w-16 h-16 bg-[#A855F7]/20 blur-xl rounded-full"></div>
+        </div>
+        <div class="glass-card interactive rounded-xl p-4 text-center">
+            <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Absent</div>
+            <div class="text-3xl font-bold text-gray-500">{{ results.absent|length }}</div>
+        </div>
+    </div>
+
+    {% if results.false_present|length == 0 %}
+    <div class="bg-green-500/10 border border-green-500/20 rounded-xl p-4 mb-8 flex items-start gap-3 glass-card">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-400 mt-0.5 drop-shadow-[0_0_5px_rgba(74,222,128,0.6)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+            <h3 class="text-green-400 font-semibold">Perfect Match</h3>
+            <p class="text-green-400/80 text-sm">All manual attendance entries match the AI detection perfectly.</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-8 flex items-start gap-3 glass-card">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-400 mt-0.5 drop-shadow-[0_0_5px_rgba(248,113,113,0.6)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+            <h3 class="text-red-400 font-semibold">Discrepancies Found</h3>
+            <p class="text-red-400/80 text-sm">AI detected some students who were marked present are actually missing from the image.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="space-y-6">
+        <!-- False Present -->
+        {% if results.false_present|length > 0 %}
+        <div class="glass-card rounded-xl overflow-hidden border-l-4 border-red-500 shadow-[0_0_15px_rgba(248,113,113,0.1)]">
+            <div class="bg-red-500/10 px-4 py-4 border-b border-red-500/20 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <h3 class="font-bold text-red-400">False Present (Marked but not detected)</h3>
+                    <span class="bg-red-500/20 text-red-400 text-xs px-2.5 py-1 rounded-full font-bold border border-red-500/30">{{ results.false_present|length }}</span>
+                </div>
+                <button onclick="openFalsePresentModal()" class="text-xs bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-[0_0_10px_rgba(248,113,113,0.4)] transition-colors font-semibold tracking-wide">VIEW</button>
+            </div>
+            <ul class="divide-y divide-white/5 bg-white/5">
+                {% for s in results.false_present %}
+                <li class="px-5 py-3.5 flex justify-between items-center hover:bg-white/5 transition-colors">
+                    <div>
+                        <span class="font-medium text-[#E5E7EB]">{{ s.name }}</span>
+                        <span class="text-xs text-gray-500 ml-2">Roll: {{ s.roll }}</span>
+                    </div>
+                    <span class="text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded">Missing</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Present -->
+            <div class="glass-card rounded-xl overflow-hidden border-t-2 border-[#A855F7]">
+                <div class="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                    <h3 class="font-bold text-[#E5E7EB]">Verified Present</h3>
+                    <span class="bg-[#A855F7]/20 text-[#A855F7] border border-[#A855F7]/30 text-xs px-2.5 py-1 rounded-full font-bold">{{ results.present|length }}</span>
+                </div>
+                <ul class="divide-y divide-white/5 max-h-64 overflow-y-auto">
+                    {% for s in results.present %}
+                    <li class="px-5 py-3 flex justify-between items-center hover:bg-white/5 transition-colors">
+                        <span class="text-sm font-medium text-[#E5E7EB]">{{ s.name }}</span>
+                        <span class="text-xs text-gray-500">{{ s.roll }}</span>
+                    </li>
+                    {% else %}
+                    <li class="px-4 py-4 text-sm text-gray-500 text-center italic">None</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Absent -->
+            <div class="glass-card rounded-xl overflow-hidden border-t-2 border-gray-600">
+                <div class="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                    <h3 class="font-bold text-[#E5E7EB]">Absent</h3>
+                    <span class="bg-white/10 text-gray-400 border border-white/20 text-xs px-2.5 py-1 rounded-full font-bold">{{ results.absent|length }}</span>
+                </div>
+                <ul class="divide-y divide-white/5 max-h-64 overflow-y-auto">
+                    {% for s in results.absent %}
+                    <li class="px-5 py-3 flex justify-between items-center hover:bg-white/5 transition-colors">
+                        <span class="text-sm font-medium text-[#E5E7EB]">{{ s.name }}</span>
+                        <span class="text-xs text-gray-500">{{ s.roll }}</span>
+                    </li>
+                    {% else %}
+                    <li class="px-4 py-4 text-sm text-gray-500 text-center italic">None</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+        <a href="{{ url_for('attendance') }}" class="px-8 py-3.5 rounded-lg border border-white/20 text-[#E5E7EB] font-medium hover:bg-white/10 transition-colors text-center shadow-sm">
+            Back to Attendance
+        </a>
+        <form action="{{ url_for('submit_attendance') }}" method="POST" onsubmit="return confirmSubmission()" class="w-full sm:w-auto">
+            <button type="submit" class="w-full btn-primary py-3.5 px-8">
+                Submit Attendance
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- False Present Modal -->
+<div id="fp-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-40 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+    <div class="glass-card rounded-2xl w-full max-w-4xl mx-4 max-h-[85vh] overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col shadow-[0_30px_60px_rgba(0,0,0,0.7)] border border-white/20 z-50" id="fp-modal-content">
+        <div class="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
+            <h3 class="font-bold text-xl text-white flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-400 drop-shadow-[0_0_5px_rgba(248,113,113,0.5)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                False Present Students
+            </h3>
+            <button onclick="closeFalsePresentModal()" class="text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <div class="p-8 overflow-y-auto" style="perspective: 1000px;">
+            <div class="flex flex-wrap justify-center gap-8">
+                {% for s in results.false_present %}
+                <div class="w-[240px] bg-white/5 rounded-2xl p-6 border border-white/10 hover:border-red-500/50 transition-all flex flex-col items-center text-center shadow-[0_10px_30px_rgba(0,0,0,0.5)] student-3d-card group">
+                    <div class="w-28 h-28 rounded-full overflow-hidden mb-5 border-4 border-white/10 shadow-lg bg-black/50 group-hover:border-red-400/50 transition-colors">
+                        <img src="{{ url_for('static', filename=s.image) }}" onerror="this.src='{{ url_for('static', filename='default.jpg') }}'" class="w-full h-full object-cover" alt="{{ s.name }}">
+                    </div>
+                    <h4 class="font-bold text-white text-lg tracking-wide group-hover:text-red-100 transition-colors">{{ s.name }}</h4>
+                    <p class="text-sm font-semibold text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-full mt-3">Roll: {{ s.roll }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="p-5 border-t border-white/10 bg-white/5 flex justify-end">
+            <button onclick="closeFalsePresentModal()" class="bg-white/10 hover:bg-white/20 text-[#E5E7EB] font-medium py-2.5 px-8 rounded-lg transition-colors border border-white/10">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .student-3d-card {
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+    }
+    .student-3d-card:hover {
+        transform: perspective(1000px) rotateY(8deg) scale(1.03);
+        box-shadow: -10px 10px 30px rgba(0,0,0,0.6), 0 0 20px rgba(248,113,113,0.15);
+        z-index: 10;
+    }
+</style>
+
+<script>
+    function confirmSubmission() {
+        return confirm("WARNING: AI suggestions may not be 100% accurate. Please verify before submission.\n\nClick OK to confirm and save to Excel.");
+    }
+
+    const fpModal = document.getElementById('fp-modal');
+    const fpModalContent = document.getElementById('fp-modal-content');
+
+    function openFalsePresentModal() {
+        fpModal.classList.remove('hidden');
+        // trigger reflow
+        void fpModal.offsetWidth;
+        fpModal.classList.remove('opacity-0');
+        fpModalContent.classList.add('modal-enter');
+        fpModalContent.classList.remove('scale-95');
+    }
+
+    function closeFalsePresentModal() {
+        fpModal.classList.add('opacity-0');
+        fpModalContent.classList.remove('modal-enter');
+        fpModalContent.classList.add('scale-95');
+        setTimeout(() => {
+            fpModal.classList.add('hidden');
+        }, 300);
+    }
+    
+    // Close modal when clicking outside the content
+    if (fpModal) {
+        fpModal.addEventListener('click', function(e) {
+            if (e.target === fpModal) {
+                closeFalsePresentModal();
+            }
+        });
+    }
+</script>
+{% endblock %}
