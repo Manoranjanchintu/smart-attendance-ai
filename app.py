@@ -349,6 +349,7 @@ def download_report():
     
     df = pd.DataFrame(records, columns=["Roll Number", "Student Name", "Class", "Date", "Time", "Status"])
     
+<<<<<<< HEAD
     # Use in-memory stream — Render's filesystem is ephemeral and not safe for temp files
     import io
     from flask import send_file
@@ -372,3 +373,19 @@ if __name__ == "__main__":
 with app.app_context():
     db.create_all()
     migrate_students()
+=======
+    output_file = f"attendance_report_{filter_type}.xlsx"
+    df.to_excel(output_file, index=False)
+    
+    from flask import send_file
+    return send_file(output_file, as_attachment=True)
+
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        migrate_students()
+    
+    # Use environment variable for debug mode
+    debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    app.run(debug=debug_mode, host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+>>>>>>> b964311e6ef9764337de389bc5faa700c7637bf9
