@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Database / Data
+attendance.xlsx
+attendance_report_weekly.xlsx
+*.xls
+*.csv
+*.json
+# *.pkl (Removing generic pkl ignore)
+# Only ignore other pkl if needed, but the user specifically wants encodings.pkl included.
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flask
+instance/
+.pytest_cache/
+
+# Deployment
+# runtime.txt and Procfile should NOT be ignored.
