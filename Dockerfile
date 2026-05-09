@@ -2,8 +2,9 @@
 FROM continuumio/miniconda3:latest
 
 # Install system dependencies
+# Using libgl1 instead of libgl1-mesa-glx for compatibility with newer Debian
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,5 +26,4 @@ COPY . .
 EXPOSE 5000
 
 # Command to run the application
-# We use the full path to the conda environment's gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
