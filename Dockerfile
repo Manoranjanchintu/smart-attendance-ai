@@ -11,9 +11,9 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Step 1: Install dlib and Python 3.11 using Conda
-# We put --no-plugins at the start where it belongs
+# We use the 'classic' solver to avoid plugin/lock issues on Render
 RUN conda clean --all -y && \
-    conda --no-plugins install -c conda-forge dlib=19.24.1 python=3.11 -y
+    conda install --solver=classic -c conda-forge dlib=19.24.1 python=3.11 -y
 
 # Step 2: Install other requirements via pip
 COPY requirements.txt .
