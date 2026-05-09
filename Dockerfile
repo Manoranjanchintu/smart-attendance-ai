@@ -11,9 +11,9 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Step 1: Install dlib and Python 3.11 using Conda
-# We use --no-plugins and clean the index to avoid the "database is locked" error
+# We put --no-plugins at the start where it belongs
 RUN conda clean --all -y && \
-    conda install -c conda-forge dlib=19.24.1 python=3.11 --no-plugins -y
+    conda --no-plugins install -c conda-forge dlib=19.24.1 python=3.11 -y
 
 # Step 2: Install other requirements via pip
 COPY requirements.txt .
