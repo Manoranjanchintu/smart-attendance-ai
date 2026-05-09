@@ -2,7 +2,6 @@
 FROM continuumio/miniconda3:latest
 
 # Install system dependencies
-# Using libgl1 instead of libgl1-mesa-glx for compatibility with newer Debian
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -11,9 +10,10 @@ RUN apt-get update && apt-get install -y \
 # Set the working directory
 WORKDIR /app
 
-# Step 1: Install dlib using Conda (This downloads a PRE-BUILT binary)
-# No compilation = No memory crash!
-RUN conda install -c conda-forge dlib=19.24.1 -y
+# Step 1: Install dlib and Python 3.11 using Conda
+# We use --no-plugins and clean the index to avoid the "database is locked" error
+RUN conda clean --all -y && \
+    conda install -c conda-forge dlib=19.24.1 python=3.11 --no-plugins -y
 
 # Step 2: Install other requirements via pip
 COPY requirements.txt .
